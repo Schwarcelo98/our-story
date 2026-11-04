@@ -8,10 +8,13 @@ if (supabase) {
   supabase.auth.getSession().then(({ data }) => {
     session.value = data.session;
     authReady.value = true;
+  }).catch(() => { authReady.value = true; });
+
+  supabase.auth.onAuthStateChange((_event, nextSession) => {
+    session.value = nextSession;
   });
-  supabase.auth.onAuthStateChange((_event, s) => {
-    session.value = s;
-  });
+} else {
+  authReady.value = true;
 }
 
 export const signIn = (email, password) => supabase.auth.signInWithPassword({ email, password });

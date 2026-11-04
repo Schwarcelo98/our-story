@@ -1,9 +1,6 @@
 <script setup>
-import { ref, reactive, watch } from "vue";
+import { ref, reactive } from "vue";
 import { entries, loadAlbum, saveEntry, removeEntry, resizeImage } from "../album";
-import { session, authReady, signOut } from "../auth";
-import { configured } from "../supabase";
-import LoginView from "./LoginView.vue";
 
 defineEmits(["back"]);
 
@@ -30,10 +27,7 @@ async function load() {
   }
 }
 
-watch(session, (s) => {
-  if (s) load();
-  else entries.value = [];
-}, { immediate: true });
+load();
 
 function startEdit(entry) {
   Object.assign(draft, entry
@@ -99,32 +93,25 @@ async function remove() {
 <template>
   <main class="home album">
     <button class="icon back" aria-label="Back" @click="$emit('back')">&larr;</button>
-    <button v-if="session" class="link logout" @click="signOut">log out</button>
 
     <header class="top">
       <h1>Our Album</h1>
       <p class="lead">Photos and notes of our story.</p>
-      <button v-if="session" class="btn" @click="startEdit()">+ add a memory</button>
+      <button class="btn" @click="startEdit()">+ add a memory</button>
     </header>
 
-    <p v-if="!configured" class="error">The Supabase connection is not set up yet (see .env.example).</p>
-    <p v-else-if="!authReady" class="empty">loading...</p>
-    <LoginView v-else-if="!session" />
+    <p v-if="loadError" class="error">{{ loadError }}</p>
+    <p v-else-if="loading && !entries.length" class="empty">loading...</p>
+    <p v-else-if="!entries.length" class="empty">Nothing here yet. Add your first photo or note.</p>
 
-    <template v-else>
-      <p v-if="loadError" class="error">{{ loadError }}</p>
-      <p v-else-if="loading && !entries.length" class="empty">loading...</p>
-      <p v-else-if="!entries.length" class="empty">Nothing here yet. Add your first photo or note.</p>
-
-      <div class="polaroids">
-        <button v-for="e in entries" :key="e.id" class="polaroid" @click="open(e)">
-          <img v-if="e.url" :src="e.url" :alt="e.title || 'Photo'" loading="lazy">
-          <span v-else class="noteblock">{{ e.note }}</span>
-          <span class="cap">{{ e.title || "untitled" }}</span>
-          <span class="date">{{ pretty(e.date) }}</span>
-        </button>
-      </div>
-    </template>
+    <div class="polaroids">
+      <button v-for="e in entries" :key="e.id" class="polaroid" @click="open(e)">
+        <img v-if="e.url" :src="e.url" :alt="e.title || 'Photo'" loading="lazy">
+        <span v-else class="noteblock">{{ e.note }}</span>
+        <span class="cap">{{ e.title || "untitled" }}</span>
+        <span class="date">{{ pretty(e.date) }}</span>
+      </button>
+    </div>
 
     <div v-if="mode === 'view'" class="overlay" @click.self="close">
       <div class="modal wide">

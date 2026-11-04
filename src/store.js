@@ -1,4 +1,6 @@
 import { reactive, watch } from "vue";
+import { supabase } from "./supabase";
+import { session } from "./auth";
 import { DECKS } from "./data/decks";
 
 const KEY = "get2know-v2";
@@ -17,7 +19,31 @@ export const store = reactive({
   ...JSON.parse(localStorage.getItem(KEY) || "{}")
 });
 
-watch(store, () => localStorage.setItem(KEY, JSON.stringify(store)), { deep: true });
+let syncTimer;
+let loadingShared = false;
+watch(store, () => {
+  localStorage.setItem(KEY, JSON.stringify(store));
+  if (!session.value || loadingShared || !supabase) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async () => {
+    const { error } = await supabase.from("shared_state").upsert({ id: "couple", data: { progress: store.progress, custom: store.custom } });
+    if (error) console.error("Could not sync shared story progress", error);
+  }, 400);
+}, { deep: true });
+
+export async function loadSharedState() {
+  if (!supabase) return;
+  const { data, error } = await supabase.from("shared_state").select("data").eq("id", "couple").maybeSingle();
+  if (error) throw error;
+  if (data?.data) {
+    loadingShared = true;
+    store.progress = data.data.progress || {};
+    store.custom = data.data.custom || {};
+    loadingShared = false;
+  } else {
+    await supabase.from("shared_state").upsert({ id: "couple", data: { progress: store.progress, custom: store.custom } });
+  }
+}
 
 export const allQuestions = (deck) => [...deck.questions, ...(store.custom[deck.id] || [])];
 
