@@ -1,4 +1,4 @@
-# Our Story
+﻿# Our Story
 
 Private Vue app for Vero and Daniel. The frontend is hosted on GitHub Pages; Supabase provides email/password login, a shared album, and shared card progress/questions.
 
