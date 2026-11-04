@@ -11,6 +11,14 @@ import AlbumView from "./components/AlbumView.vue";
 
 const screen = ref("hub"); // hub | decks | game | album
 const deck = ref(null);
+const pageLoading = ref(false);
+let pageTimer;
+
+watch(screen, () => {
+  pageLoading.value = true;
+  clearTimeout(pageTimer);
+  pageTimer = setTimeout(() => { pageLoading.value = false; }, 420);
+});
 
 watch(session, async (nextSession) => {
   if (nextSession) {
@@ -31,9 +39,17 @@ function pick(d) {
   <LoginView v-else-if="!session" />
   <template v-else>
     <button class="link logout" @click="signOut">Log out</button>
-    <HubView v-if="screen === 'hub'" @open="screen = $event" />
-    <HomeView v-else-if="screen === 'decks'" @select="pick" @back="screen = 'hub'" />
-    <GameView v-else-if="screen === 'game'" :key="deck.id" :deck="deck" @back="screen = 'decks'" />
-    <AlbumView v-else @back="screen = 'hub'" />
+    <Transition name="page" mode="out-in">
+      <HubView v-if="screen === 'hub'" key="hub" @open="screen = $event" />
+      <HomeView v-else-if="screen === 'decks'" key="decks" @select="pick" @back="screen = 'hub'" />
+      <GameView v-else-if="screen === 'game'" :key="`game-${deck.id}`" :deck="deck" @back="screen = 'decks'" />
+      <AlbumView v-else key="album" @back="screen = 'hub'" />
+    </Transition>
+    <Transition name="heart-loader">
+      <div v-if="pageLoading" class="page-loader" role="status" aria-live="polite">
+        <span class="loader-heart" aria-hidden="true">♥</span>
+        <span>turning our pages…</span>
+      </div>
+    </Transition>
   </template>
 </template>

@@ -16,6 +16,7 @@ export const MIX = {
 export const store = reactive({
   progress: {},
   custom: {},
+  completed: [],
   ...JSON.parse(localStorage.getItem(KEY) || "{}")
 });
 
@@ -26,7 +27,7 @@ watch(store, () => {
   if (!session.value || loadingShared || !supabase) return;
   clearTimeout(syncTimer);
   syncTimer = setTimeout(async () => {
-    const { error } = await supabase.from("shared_state").upsert({ id: "couple", data: { progress: store.progress, custom: store.custom } });
+    const { error } = await supabase.from("shared_state").upsert({ id: "couple", data: { progress: store.progress, custom: store.custom, completed: store.completed } });
     if (error) console.error("Could not sync shared story progress", error);
   }, 400);
 }, { deep: true });
@@ -39,17 +40,28 @@ export async function loadSharedState() {
     loadingShared = true;
     store.progress = data.data.progress || {};
     store.custom = data.data.custom || {};
+    store.completed = Array.isArray(data.data.completed)
+      ? data.data.completed
+      : Object.values(store.progress).flatMap((progress) => Array.isArray(progress.order) ? progress.order.slice(0, progress.pos || 0) : []);
     loadingShared = false;
   } else {
-    await supabase.from("shared_state").upsert({ id: "couple", data: { progress: store.progress, custom: store.custom } });
+    await supabase.from("shared_state").upsert({ id: "couple", data: { progress: store.progress, custom: store.custom, completed: store.completed } });
   }
 }
 
 export const allQuestions = (deck) => [...deck.questions, ...(store.custom[deck.id] || [])];
 
 const keysOf = (deck) => allQuestions(deck).map((_, i) => `${deck.id}:${i}`);
+const allKeys = () => DECKS.flatMap(keysOf);
 
 export const cardKeys = (deck) => (deck.id === MIX.id ? DECKS.flatMap(keysOf) : keysOf(deck));
+export const completedCount = (deck) => cardKeys(deck).filter((key) => store.completed.includes(key)).length;
+
+export function markCompleted(key) {
+  if (!store.completed.includes(key)) store.completed.push(key);
+  const everyKey = allKeys();
+  if (everyKey.length && everyKey.every((item) => store.completed.includes(item))) store.completed = [];
+}
 
 // Card keys look like "deckId:index"; progress saved in older formats resolves to null.
 export function resolveCard(key) {
@@ -71,8 +83,14 @@ function shuffle(a) {
 
 // The mix deals one card per category per round so no category dominates.
 export function makeOrder(deck) {
-  if (deck.id !== MIX.id) return shuffle(keysOf(deck));
-  const piles = DECKS.map((d) => shuffle(keysOf(d)));
+  let remaining = cardKeys(deck).filter((key) => !store.completed.includes(key));
+  if (!remaining.length && deck.id === MIX.id && allKeys().length) {
+    store.completed = [];
+    remaining = cardKeys(deck);
+  }
+  if (deck.id !== MIX.id) return shuffle(remaining);
+  const available = new Set(remaining);
+  const piles = DECKS.map((d) => shuffle(keysOf(d).filter((key) => available.has(key))));
   const out = [];
   while (piles.some((p) => p.length)) {
     for (const p of shuffle(piles)) if (p.length) out.push(p.pop());

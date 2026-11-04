@@ -1,16 +1,23 @@
 <script setup>
-import { ref, reactive } from "vue";
+import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
 import { entries, loadAlbum, saveEntry, removeEntry, resizeImage } from "../album";
 
 defineEmits(["back"]);
 
 const mode = ref(null); // null | "view" | "edit"
 const viewing = ref(null);
+const zoomed = ref(false);
+const search = ref("");
 const busy = ref(false);
 const loading = ref(false);
 const error = ref("");
 const loadError = ref("");
-const draft = reactive({ id: null, title: "", date: "", note: "", photo: null, photoPath: null, preview: null });
+const draft = reactive({ id: null, title: "", date: "", location: "", note: "", photo: null, photoPath: null, preview: null });
+const filteredEntries = computed(() => {
+  const term = search.value.trim().toLowerCase();
+  if (!term) return entries.value;
+  return entries.value.filter((entry) => [entry.title, entry.location, entry.note, entry.date].some((value) => value?.toLowerCase().includes(term)));
+});
 
 const today = () => new Date().toLocaleDateString("sv-SE");
 const pretty = (d) => new Date(`${d}T00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
@@ -31,8 +38,8 @@ load();
 
 function startEdit(entry) {
   Object.assign(draft, entry
-    ? { id: entry.id, title: entry.title, date: entry.date, note: entry.note, photo: null, photoPath: entry.photo_path, preview: entry.url }
-    : { id: null, title: "", date: today(), note: "", photo: null, photoPath: null, preview: null });
+    ? { id: entry.id, title: entry.title, date: entry.date, location: entry.location || "", note: entry.note, photo: null, photoPath: entry.photo_path, preview: entry.url }
+    : { id: null, title: "", date: today(), location: "", note: "", photo: null, photoPath: null, preview: null });
   error.value = "";
   mode.value = "edit";
 }
@@ -45,7 +52,14 @@ function open(entry) {
 function close() {
   mode.value = null;
   viewing.value = null;
+  zoomed.value = false;
 }
+
+function onKey(e) {
+  if (e.key === "Escape") zoomed.value = false;
+}
+onMounted(() => document.addEventListener("keydown", onKey));
+onUnmounted(() => document.removeEventListener("keydown", onKey));
 
 async function onFile(e) {
   const file = e.target.files[0];
@@ -96,34 +110,52 @@ async function remove() {
 
     <header class="top">
       <h1>Our Album</h1>
-      <p class="lead">Photos and notes of our story.</p>
+      <p class="lead">Photos and notes from our story.</p>
       <button class="btn" @click="startEdit()">+ add a memory</button>
     </header>
+
+    <label class="album-search">
+      <span aria-hidden="true">⌕</span>
+      <input v-model="search" type="search" aria-label="Search memories" placeholder="Search by title, place or note…">
+      <button v-if="search" type="button" aria-label="Clear search" @click="search = ''">×</button>
+    </label>
 
     <p v-if="loadError" class="error">{{ loadError }}</p>
     <p v-else-if="loading && !entries.length" class="empty">loading...</p>
     <p v-else-if="!entries.length" class="empty">Nothing here yet. Add your first photo or note.</p>
+    <p v-else-if="!filteredEntries.length" class="empty">No memories match your search.</p>
 
     <div class="polaroids">
-      <button v-for="e in entries" :key="e.id" class="polaroid" @click="open(e)">
+      <button v-for="e in filteredEntries" :key="e.id" class="polaroid" @click="open(e)">
         <img v-if="e.url" :src="e.url" :alt="e.title || 'Photo'" loading="lazy">
         <span v-else class="noteblock">{{ e.note }}</span>
         <span class="cap">{{ e.title || "untitled" }}</span>
         <span class="date">{{ pretty(e.date) }}</span>
+        <span v-if="e.location" class="place">{{ e.location }}</span>
       </button>
     </div>
 
     <div v-if="mode === 'view'" class="overlay" @click.self="close">
       <div class="modal wide">
-        <img v-if="viewing.url" :src="viewing.url" :alt="viewing.title" class="full">
+        <button v-if="viewing.url" class="photo-zoom" type="button" aria-label="Enlarge photo" @click="zoomed = true">
+          <img :src="viewing.url" :alt="viewing.title || 'Memory photo'" class="full">
+          <span class="zoom-hint">Tap to enlarge</span>
+        </button>
         <h2>{{ viewing.title || "untitled" }}</h2>
         <p class="date">{{ pretty(viewing.date) }}</p>
+        <p v-if="viewing.location" class="place">{{ viewing.location }}</p>
         <p v-if="viewing.note" class="note">{{ viewing.note }}</p>
         <div class="row">
           <button class="btn ghost" @click="close">close</button>
           <button class="btn" @click="startEdit(viewing)">edit</button>
         </div>
       </div>
+    </div>
+
+    <div v-if="zoomed && viewing?.url" class="photo-lightbox" role="dialog" aria-modal="true" aria-label="Enlarged memory photo" @click.self="zoomed = false">
+      <button class="icon lightbox-close" aria-label="Close enlarged photo" @click="zoomed = false">×</button>
+      <img :src="viewing.url" :alt="viewing.title || 'Memory photo'" class="lightbox-image">
+      <p v-if="viewing.title" class="lightbox-caption">{{ viewing.title }}</p>
     </div>
 
     <div v-if="mode === 'edit'" class="overlay" @click.self="close">
@@ -142,6 +174,10 @@ async function remove() {
         <label class="field">
           date
           <input v-model="draft.date" type="date" required>
+        </label>
+        <label class="field">
+          location
+          <input v-model="draft.location" maxlength="120" placeholder="Vienna, Austria">
         </label>
         <label class="field">
           note

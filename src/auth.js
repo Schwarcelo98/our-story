@@ -17,5 +17,9 @@ if (supabase) {
   authReady.value = true;
 }
 
-export const signIn = (email, password) => supabase.auth.signInWithPassword({ email, password });
+export const signIn = (email, password, captchaToken) => supabase.auth.signInWithPassword({
+  email,
+  password,
+  ...(captchaToken ? { options: { captchaToken } } : {})
+});
 export const signOut = () => supabase.auth.signOut();

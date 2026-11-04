@@ -1,5 +1,6 @@
 <script setup>
 import { PLAYERS } from "../data/decks";
+import StoryArt from "./StoryArt.vue";
 
 defineEmits(["open"]);
 
@@ -15,6 +16,7 @@ const sections = [
     <header class="top">
       <h1>Our Story</h1>
       <p class="sub">{{ PLAYERS[0] }} &amp; {{ PLAYERS[1] }}</p>
+      <StoryArt />
       <p class="lead">A little place for everything that belongs to us.</p>
     </header>
 

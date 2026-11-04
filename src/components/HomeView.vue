@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import { PLAYERS } from "../data/decks";
-import { DECKS, MIX, store, cardKeys, addQuestion } from "../store";
+import { DECKS, MIX, store, cardKeys, completedCount, addQuestion } from "../store";
 
 defineEmits(["select", "back"]);
 
@@ -9,7 +9,7 @@ const showHelp = ref(false);
 const addDeck = ref(DECKS[0].id);
 const addText = ref("");
 
-const seen = (deck) => (store.progress[deck.id] ? store.progress[deck.id].pos + 1 : 0);
+const seen = (deck) => completedCount(deck);
 
 function submit() {
   const text = addText.value.trim();
@@ -32,7 +32,7 @@ function submit() {
       <span class="emoji">{{ MIX.emoji }}</span>
       <span class="text">
         <span class="name">{{ MIX.name }}</span>
-        <span class="desc">a card from every category, {{ cardKeys(MIX).length }} in total</span>
+        <span class="desc">{{ cardKeys(MIX).length - completedCount(MIX) }} unanswered cards across every category</span>
       </span>
     </button>
 

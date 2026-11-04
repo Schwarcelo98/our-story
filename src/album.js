@@ -17,7 +17,7 @@ export async function loadAlbum() {
   entries.value = data.map((entry) => ({ ...entry, url: urls[entry.photo_path] || null }));
 }
 
-export async function saveEntry({ id, title, date, note, photo, photoPath }) {
+export async function saveEntry({ id, title, date, location, note, photo, photoPath }) {
   const storage = supabase.storage.from(BUCKET);
   let path = photoPath || null;
   if (photo) {
@@ -25,7 +25,7 @@ export async function saveEntry({ id, title, date, note, photo, photoPath }) {
     const { error } = await storage.upload(path, photo, { contentType: "image/jpeg" });
     if (error) throw error;
   }
-  const row = { title, date, note, photo_path: path };
+  const row = { title, date, location: location?.trim() || "", note, photo_path: path };
   const result = id
     ? await supabase.from("memories").update(row).eq("id", id)
     : await supabase.from("memories").insert(row);
