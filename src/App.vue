@@ -38,7 +38,11 @@ function pick(d) {
   <main v-else-if="!authReady" class="home"><h1>Our Story</h1><p class="empty">Loading…</p></main>
   <LoginView v-else-if="!session" />
   <template v-else>
-    <button class="link logout" @click="signOut">Log out</button>
+    <button class="logout-button" @click="signOut">
+      <span class="logout-heart" aria-hidden="true">♡</span>
+      <span>Log out</span>
+      <span class="logout-sparkle" aria-hidden="true">✦</span>
+    </button>
     <Transition name="page" mode="out-in">
       <HubView v-if="screen === 'hub'" key="hub" @open="screen = $event" />
       <HomeView v-else-if="screen === 'decks'" key="decks" @select="pick" @back="screen = 'hub'" />

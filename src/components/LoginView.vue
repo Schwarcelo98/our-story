@@ -49,7 +49,18 @@ async function submit() {
   error.value = "";
   try {
     const { error: err } = await signIn(email.value.trim(), password.value, captchaToken.value);
-    if (err) error.value = "The email address or password is incorrect.";
+    if (err) {
+      const details = `${err.code || ""} ${err.message || ""}`.toLowerCase();
+      if (details.includes("captcha") || details.includes("turnstile")) {
+        error.value = captchaSiteKey
+          ? "Captcha verification failed. Check that localhost is allowed in your Turnstile widget, then refresh and try again."
+          : "This Supabase project requires CAPTCHA, but VITE_TURNSTILE_SITE_KEY is missing from .env.local.";
+      } else if (details.includes("invalid login credentials")) {
+        error.value = "The email address or password is incorrect.";
+      } else {
+        error.value = err.message || "Unable to log in. Please try again.";
+      }
+    }
   } catch {
     error.value = "Unable to log in right now. Please check your connection.";
   } finally {

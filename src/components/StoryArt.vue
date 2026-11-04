@@ -1,15 +1,18 @@
+<script setup>
+import couplePortrait from "../assets/vero-daniel-cute-cartoon-blue-eyes.png";
+</script>
+
 <template>
-  <div class="story-art" role="img" aria-label="Vero and Daniel, connected by a little heart">
-    <svg viewBox="0 0 320 210" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path class="art-orbit" d="M39 111C63 30 254 20 280 99c26 79-110 105-167 72C52 142 78 65 149 58c53-5 95 25 90 56-5 34-54 44-79 24" />
-      <path class="art-orbit art-orbit-inner" d="M73 116c17-42 97-63 145-32 31 20 16 60-20 65-28 4-45-11-43-28" />
-      <circle class="art-sun" cx="159" cy="103" r="43" />
-      <text class="art-initials" x="159" y="111" text-anchor="middle">V + D</text>
-      <path class="art-heart" d="M230 53c-11-13-32-1-20 14l18 17 18-17c13-14-7-27-18-14h2z" />
-      <path class="art-star" d="m73 51 4 11 11 4-11 4-4 11-4-11-11-4 11-4z" />
-      <path class="art-star art-star-two" d="m253 144 3 8 8 3-8 3-3 8-3-8-8-3 8-3z" />
-      <circle class="art-dot" cx="103" cy="168" r="4" />
-      <circle class="art-dot art-dot-two" cx="216" cy="42" r="3" />
+  <div class="story-art" role="img" aria-label="Comic-style portrait of Vero and Daniel">
+    <svg viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path class="art-orbit" d="M38 133C57 37 247 17 282 105c34 86-99 151-172 116C40 193 65 83 144 66c61-13 115 24 102 67-10 34-57 45-83 22" />
+      <path class="art-orbit art-orbit-inner" d="M69 142c17-49 94-76 146-43 32 20 17 64-20 69-30 4-48-14-43-34" />
+      <path class="art-heart" d="M251 50c-10-12-29-1-18 13l16 15 17-15c12-13-7-25-17-13h2z" />
+      <path class="art-star" d="m63 54 4 11 11 4-11 4-4 11-4-11-11-4 11-4z" />
+      <path class="art-star art-star-two" d="m271 176 3 8 8 3-8 3-3 8-3-8-8-3 8-3z" />
+      <circle class="art-dot" cx="67" cy="201" r="4" />
+      <circle class="art-dot art-dot-two" cx="221" cy="35" r="3" />
     </svg>
+    <img class="story-couple" :src="couplePortrait" alt="">
   </div>
 </template>
