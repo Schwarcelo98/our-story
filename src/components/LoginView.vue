@@ -1,9 +1,15 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { signIn } from "../auth";
 
 const captchaSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 const email = ref("");
+const greeting = computed(() => {
+  const address = email.value.trim().toLowerCase();
+  if (address === "veronicagodea387@gmail.com") return "Welcome back, Vero! Your story is waiting for you. 💛";
+  if (address === "daniel.schwarzer@gmx.at") return "Welcome home, Daniel! Ready for another page together? 💛";
+  return "";
+});
 const password = ref("");
 const error = ref("");
 const busy = ref(false);
@@ -83,8 +89,9 @@ async function submit() {
     <form class="login" @submit.prevent="submit">
       <label class="field">
         Email address
-        <input v-model="email" type="email" autocomplete="username" inputmode="email" required>
+        <input v-model="email" type="email" autocomplete="username" inputmode="email" required @input="error = ''">
       </label>
+      <p v-if="greeting" class="login-greeting" aria-live="polite">{{ greeting }}</p>
       <label class="field">
         Password
         <input v-model="password" type="password" autocomplete="current-password" required>

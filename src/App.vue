@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { authReady, session, signOut } from "./auth";
 import { configured } from "./supabase";
 import LoginView from "./components/LoginView.vue";
@@ -12,6 +12,12 @@ import AlbumView from "./components/AlbumView.vue";
 const screen = ref("hub"); // hub | decks | game | album
 const deck = ref(null);
 const pageLoading = ref(false);
+const loggedInName = computed(() => {
+  const email = session.value?.user?.email?.trim().toLowerCase();
+  if (email === "veronicagodea387@gmail.com") return "Vero";
+  if (email === "daniel.schwarzer@gmx.at") return "Daniel";
+  return session.value?.user?.email || "there";
+});
 let pageTimer;
 
 watch(screen, () => {
@@ -40,6 +46,7 @@ function pick(d) {
   <template v-else>
     <button class="logout-button" @click="signOut">
       <span class="logout-heart" aria-hidden="true">♡</span>
+      <span class="logged-in-greeting">Hi, {{ loggedInName }}!</span>
       <span>Log out</span>
       <span class="logout-sparkle" aria-hidden="true">✦</span>
     </button>

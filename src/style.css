@@ -497,6 +497,7 @@ select {
 .logout-heart { color: #df788b; font-size: 1.25rem; line-height: 1; transition: transform .2s ease; }
 .logout-button:hover .logout-heart { transform: scale(1.2) rotate(-12deg); }
 .logout-sparkle { color: #b68a45; font-size: .78rem; }
+.logged-in-greeting { color: #8c435b; }
 
 .login-page { padding-top: max(56px, 10vh); }
 .login {
@@ -508,6 +509,16 @@ select {
   text-align: left;
 }
 .login > .btn { min-height: 48px; }
+.login-greeting {
+  margin: 0;
+  padding: 10px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  background: #fff4d5;
+  box-shadow: 3px 3px 0 var(--ink);
+  font-weight: 700;
+  text-align: center;
+}
 
 .back {
   position: absolute;
