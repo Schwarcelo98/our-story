@@ -1,5 +1,5 @@
 // Edit freely: every question is answered by BOTH players. Add decks or questions here.
-export const PLAYERS = ["Vero", "Daniel"];
+export const PLAYERS = ["Vero", "Dani"];
 
 export const DECKS = [
   {
@@ -31,14 +31,14 @@ export const DECKS = [
     color: "#06b6d4",
     desc: "Where we come from",
     questions: [
-      "Vero: What do you miss most about growing up in Moldova? Daniel: What do you love most about growing up in Austria?",
+      "Vero: What do you miss most about growing up in Moldova? Dani: What do you love most about growing up in Austria?",
       "What did a typical weekend look like when you were a kid?",
       "What food from your childhood instantly takes you back home?",
       "What is a tradition from your family that you want to keep forever?",
       "What is the biggest difference between Moldova and Austria that you noticed (or I should know about)?",
       "Teach the other three words or phrases in your first language or dialect. Who is the better student?",
       "What was your favorite place to hang out as a teenager?",
-      "Vero: What was it like to move to Vienna? Daniel: What is it like living in Steyr compared to a big city?",
+      "Vero: What was it like to move to Vienna? Dani: What is it like living in Steyr compared to a big city?",
       "What did you want to be when you grew up?",
       "Who was your hero as a child?",
       "What did you imagine your life would look like at 28 or 29, and how close is it?",

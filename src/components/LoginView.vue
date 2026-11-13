@@ -83,7 +83,7 @@ async function submit() {
   <main class="home login-page">
     <header class="top">
       <h1>Our Story</h1>
-      <p class="sub">Vero &amp; Daniel</p>
+      <p class="sub">Vero &amp; Dani</p>
       <p class="lead">Log in to open your story together.</p>
     </header>
     <form class="login" @submit.prevent="submit">
