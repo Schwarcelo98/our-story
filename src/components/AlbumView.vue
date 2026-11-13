@@ -16,6 +16,7 @@ const busy = ref(false);
 const loading = ref(false);
 const error = ref("");
 const loadError = ref("");
+const selectedFileName = ref("");
 const draft = reactive({ id: null, title: "", date: "", location: "", note: "", photo: null, photoPath: null, preview: null });
 const filteredEntries = computed(() => {
   const term = search.value.trim().toLowerCase();
@@ -40,8 +41,9 @@ async function load() {
   loadError.value = "";
   try {
     await loadAlbum();
-  } catch {
-    loadError.value = "Could not load the album. Please try again.";
+  } catch (cause) {
+    console.error("Could not load the shared album", cause);
+    loadError.value = "Could not load the shared album. Check that this account's email is included in supabase/security-hardening.sql and that the script was run.";
   } finally {
     loading.value = false;
   }
@@ -56,6 +58,7 @@ function revealMore() {
 }
 
 function startEdit(entry) {
+  selectedFileName.value = "";
   Object.assign(draft, entry
     ? { id: entry.id, title: entry.title, date: entry.date, location: entry.location || "", note: entry.note, photo: null, photoPath: entry.photo_path, preview: entry.url }
     : { id: null, title: "", date: today(), location: "", note: "", photo: null, photoPath: null, preview: null });
@@ -122,6 +125,7 @@ async function onFile(e) {
   try {
     draft.photo = await resizeImage(file);
     draft.preview = URL.createObjectURL(draft.photo);
+    selectedFileName.value = file.name;
   } catch {
     error.value = "This image format is not supported. Try a JPG or PNG.";
   } finally {
@@ -139,8 +143,9 @@ async function save() {
   try {
     await saveEntry({ ...draft, title: draft.title.trim(), note: draft.note.trim() });
     close();
-  } catch {
-    error.value = "Could not save. Please try again.";
+  } catch (cause) {
+    console.error("Could not save album memory", cause);
+    error.value = "Could not save this memory. Check your connection and that this account has access to the shared album.";
   } finally {
     busy.value = false;
   }
@@ -239,6 +244,7 @@ async function remove() {
         <label class="field">
           photo
           <input type="file" accept="image/*" :disabled="busy" @change="onFile">
+          <span v-if="selectedFileName" class="selected-file">Selected: {{ selectedFileName }}</span>
         </label>
         <label class="field">
           title
