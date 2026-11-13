@@ -15,7 +15,7 @@ const pageLoading = ref(false);
 const loggedInName = computed(() => {
   const email = session.value?.user?.email?.trim().toLowerCase();
   if (email === "veronicagodea387@gmail.com") return "Vero";
-  if (email === "daniel.schwarzer@gmx.at") return "Daniel";
+  if (email === "daniel.schwarzer@gmx.at") return "Dani";
   return session.value?.user?.email || "there";
 });
 let pageTimer;

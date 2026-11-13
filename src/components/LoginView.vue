@@ -7,7 +7,7 @@ const email = ref("");
 const greeting = computed(() => {
   const address = email.value.trim().toLowerCase();
   if (address === "veronicagodea387@gmail.com") return "Welcome back, Vero! Your story is waiting for you. 💛";
-  if (address === "daniel.schwarzer@gmx.at") return "Welcome home, Daniel! Ready for another page together? 💛";
+  if (address === "daniel.schwarzer@gmx.at") return "Welcome home, Dani! Ready for another page together? 💛";
   return "";
 });
 const password = ref("");
