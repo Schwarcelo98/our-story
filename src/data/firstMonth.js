@@ -1,6 +1,6 @@
 export const firstMonth = {
   title: "One Month of Us ❤️",
-  dates: "October 25 – November 24, 2026",
+  dates: "October 25, 2026",
   subtitle: "The beginning of something beautiful.",
   introduction: "One month has passed since we decided to walk through life together. And somehow, I find myself loving you a little more every single day. I can't imagine my life without you anymore. It's amazing to experience all these first moments together, and if our first month is anything to go by, I can't wait for everything that's still ahead of us.",
   memories: [

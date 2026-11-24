@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, reactive, onMounted, nextTick } from "vue";
+import { computed, ref, reactive, onMounted, onUnmounted, nextTick } from "vue";
 import { firstMonth } from "../data/firstMonth";
 import { recapEntries, loadRecapMemories, saveRecapMemory, removeRecapMemory, resizeImage } from "../album";
 import { session } from "../auth";
@@ -15,6 +15,8 @@ const photosByMoment = computed(() => Object.fromEntries(firstMonth.memories.map
 const extraPhotos = computed(() => recapEntries.value.filter((photo) =>
   !firstMonth.memories.some((memory) => photo.moment_id === memory.id || (!photo.moment_id && photo.date === memory.date))
 ));
+const galleryIndexes = reactive({});
+const touchStarts = {};
 const daysBetween = Math.round((Date.parse("2026-10-25T00:00:00Z") - Date.parse("2026-10-04T00:00:00Z")) / 86400000);
 const stats = [
   { value: "1", label: "month together" },
@@ -28,6 +30,26 @@ const draft = reactive({ moment_id: firstMonth.memories[0].id, title: "", date: 
 const saving = ref(false);
 const deleting = ref("");
 const error = ref("");
+
+function photoAt(momentId) {
+  const photos = photosByMoment.value[momentId] || [];
+  return photos[galleryIndexes[momentId] || 0] || null;
+}
+function movePhoto(momentId, direction) {
+  const count = photosByMoment.value[momentId]?.length || 0;
+  if (!count) return;
+  galleryIndexes[momentId] = ((galleryIndexes[momentId] || 0) + direction + count) % count;
+}
+function touchStart(event, momentId) { touchStarts[momentId] = event.changedTouches[0]?.clientX || 0; }
+function touchEnd(event, momentId) {
+  const delta = (event.changedTouches[0]?.clientX || 0) - (touchStarts[momentId] || 0);
+  if (Math.abs(delta) > 45) movePhoto(momentId, delta < 0 ? 1 : -1);
+}
+
+function onCarouselKey(event, momentId) {
+  if (event.key === "ArrowLeft") { event.preventDefault(); movePhoto(momentId, -1); }
+  if (event.key === "ArrowRight") { event.preventDefault(); movePhoto(momentId, 1); }
+}
 
 function selectMoment() {
   const moment = firstMonth.memories.find((item) => item.id === draft.moment_id);
@@ -49,7 +71,11 @@ async function addPhoto() {
 async function deletePhoto(memory) {
   if (!window.confirm(`Delete “${memory.title || "this photo"}” from the recap?`)) return;
   deleting.value = memory.id; error.value = "";
-  try { await removeRecapMemory({ id: memory.id, photoPath: memory.photo_path }); }
+  try {
+    await removeRecapMemory({ id: memory.id, photoPath: memory.photo_path });
+    const momentId = memory.moment_id || firstMonth.memories.find((item) => item.date === memory.date)?.id;
+    if (momentId) galleryIndexes[momentId] = Math.min(galleryIndexes[momentId] || 0, Math.max(0, (photosByMoment.value[momentId]?.length || 1) - 1));
+  }
   catch (cause) { error.value = cause?.message || "The photo could not be deleted."; }
   finally { deleting.value = ""; }
 }
@@ -67,6 +93,8 @@ onMounted(async () => {
     document.querySelectorAll(".timeline-item, .stat-card, .recap-closing").forEach((item) => item.classList.add("is-visible"));
   }
 });
+
+onUnmounted(() => { for (const key of Object.keys(touchStarts)) delete touchStarts[key]; });
 </script>
 
 <template>
@@ -91,14 +119,39 @@ onMounted(async () => {
         <li v-for="memory in firstMonth.memories" :key="memory.id" class="timeline-item" :class="{ featured: memory.featured }">
           <span class="timeline-marker" aria-hidden="true">{{ memory.featured ? "♥" : "✦" }}</span>
           <article class="memory-card">
-            <div v-if="photosByMoment[memory.id]?.length" class="memory-gallery">
-              <figure v-for="photo in photosByMoment[memory.id]" :key="photo.id">
-                <img :src="photo.url" :alt="photo.title || memory.imageHint" loading="lazy" />
-                <figcaption v-if="photo.title || photo.note"><b v-if="photo.title">{{ photo.title }}</b><span v-if="photo.note">{{ photo.note }}</span></figcaption>
-              </figure>
+            <div v-if="photosByMoment[memory.id]?.length" class="memory-carousel"
+              tabindex="0" :aria-label="`Photos for ${memory.title}`"
+              @keydown="onCarouselKey($event, memory.id)"
+              @touchstart.passive="touchStart($event, memory.id)" @touchend.passive="touchEnd($event, memory.id)">
+              <Transition name="photo-slide" mode="out-in">
+                <figure :key="photoAt(memory.id)?.id" class="memory-slide">
+                  <img :src="photoAt(memory.id)?.url" :alt="photoAt(memory.id)?.title || memory.imageHint" loading="lazy" />
+                  <figcaption v-if="photoAt(memory.id)?.title || photoAt(memory.id)?.note">
+                    <b v-if="photoAt(memory.id)?.title">{{ photoAt(memory.id)?.title }}</b>
+                    <span v-if="photoAt(memory.id)?.note">{{ photoAt(memory.id)?.note }}</span>
+                  </figcaption>
+                </figure>
+              </Transition>
+              <template v-if="photosByMoment[memory.id].length > 1">
+                <button class="carousel-arrow carousel-prev" :aria-label="`Previous photo for ${memory.title}`" @click="movePhoto(memory.id, -1)">‹</button>
+                <button class="carousel-arrow carousel-next" :aria-label="`Next photo for ${memory.title}`" @click="movePhoto(memory.id, 1)">›</button>
+                <span class="carousel-count">{{ (galleryIndexes[memory.id] || 0) + 1 }} / {{ photosByMoment[memory.id].length }}</span>
+              </template>
             </div>
             <div v-else class="memory-placeholder" aria-label="Photo placeholder">
-              <span class="placeholder-sparkle" aria-hidden="true">✧</span>
+              <svg class="placeholder-art" viewBox="0 0 420 190" role="img" :aria-label="`Illustration placeholder for ${memory.imageHint}`">
+                <defs>
+                  <linearGradient :id="`sky-${memory.id}`" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff8ef" /><stop offset="1" stop-color="#f0dce0" /></linearGradient>
+                </defs>
+                <rect x="2" y="2" width="416" height="186" rx="24" :fill="`url(#sky-${memory.id})`" />
+                <circle cx="324" cy="53" r="22" fill="#f7d99b" />
+                <path d="M2 138 106 74l71 47 65-65 176 104v28H2z" fill="#c7d8d0" />
+                <path d="m2 159 118-55 73 36 78-56 147 82v22H2z" fill="#a6c1b9" />
+                <rect x="174" y="62" width="72" height="54" rx="13" fill="#fffaf5" stroke="#8d7188" stroke-width="4" />
+                <circle cx="210" cy="89" r="15" fill="#e7c7ca" stroke="#8d7188" stroke-width="4" />
+                <circle cx="232" cy="73" r="3" fill="#d8b16d" />
+                <path d="M138 44h27m-13-13v27M273 121h18m-9-9v18" stroke="#c4869a" stroke-width="3" stroke-linecap="round" />
+              </svg>
               <span class="placeholder-label">A photo could go here</span>
               <span class="placeholder-hint">{{ memory.imageHint }}</span>
             </div>
