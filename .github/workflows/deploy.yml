@@ -31,6 +31,11 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_TURNSTILE_SITE_KEY: ${{ secrets.VITE_TURNSTILE_SITE_KEY }}
           VITE_STORY_OWNER_EMAIL: ${{ secrets.VITE_STORY_OWNER_EMAIL }}
+          VITE_APP_VERSION: ${{ github.sha }}
+      - name: Write deployed app version
+        run: node -e "require('node:fs').writeFileSync('dist/version.json', JSON.stringify({ version: process.env.VITE_APP_VERSION }))"
+        env:
+          VITE_APP_VERSION: ${{ github.sha }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
