@@ -3,6 +3,7 @@ import { supabase } from "./supabase";
 
 const BUCKET = "photos";
 export const entries = ref([]);
+export const recapEntries = ref([]);
 
 export async function loadAlbum() {
   const { data, error } = await supabase.from("memories").select("*").order("date", { ascending: false }).order("created_at", { ascending: false });
@@ -15,6 +16,41 @@ export async function loadAlbum() {
     for (const item of signed) if (item.path) urls[item.path] = item.signedUrl;
   }
   entries.value = data.map((entry) => ({ ...entry, url: urls[entry.photo_path] || null }));
+}
+
+export async function loadRecapMemories() {
+  const { data, error } = await supabase.from("month_recap_memories").select("*").order("date", { ascending: true }).order("created_at", { ascending: true });
+  if (error) throw error;
+  const paths = data.map((entry) => entry.photo_path).filter(Boolean);
+  const urls = {};
+  if (paths.length) {
+    const { data: signed, error: signError } = await supabase.storage.from(BUCKET).createSignedUrls(paths, 6 * 3600);
+    if (signError) throw signError;
+    for (const item of signed) if (item.path) urls[item.path] = item.signedUrl;
+  }
+  recapEntries.value = data.map((entry) => ({ ...entry, url: urls[entry.photo_path] || null }));
+}
+
+export async function saveRecapMemory({ title, date, note, photo, moment_id }) {
+  const path = `recap/${crypto.randomUUID()}.jpg`;
+  const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, photo, { contentType: "image/jpeg" });
+  if (uploadError) throw uploadError;
+  const { error } = await supabase.from("month_recap_memories").insert({ title: title.trim(), date, note: note.trim(), moment_id, photo_path: path });
+  if (error) {
+    await supabase.storage.from(BUCKET).remove([path]);
+    throw error;
+  }
+  await loadRecapMemories();
+}
+
+export async function removeRecapMemory({ id, photoPath }) {
+  const { error } = await supabase.from("month_recap_memories").delete().eq("id", id);
+  if (error) throw error;
+  if (photoPath) {
+    const { error: removeError } = await supabase.storage.from(BUCKET).remove([photoPath]);
+    if (removeError) throw removeError;
+  }
+  await loadRecapMemories();
 }
 
 export async function saveEntry({ id, title, date, location, note, photo, photoPath }) {

@@ -8,8 +8,9 @@ import HubView from "./components/HubView.vue";
 import HomeView from "./components/HomeView.vue";
 import GameView from "./components/GameView.vue";
 import AlbumView from "./components/AlbumView.vue";
+import MonthRecapView from "./components/MonthRecapView.vue";
 
-const screen = ref("hub"); // hub | decks | game | album
+const screen = ref("hub"); // hub | decks | game | album | recap
 const deck = ref(null);
 const pageLoading = ref(false);
 const loggedInName = computed(() => {
@@ -54,7 +55,8 @@ function pick(d) {
       <HubView v-if="screen === 'hub'" key="hub" @open="screen = $event" />
       <HomeView v-else-if="screen === 'decks'" key="decks" @select="pick" @back="screen = 'hub'" />
       <GameView v-else-if="screen === 'game'" :key="`game-${deck.id}`" :deck="deck" @back="screen = 'decks'" />
-      <AlbumView v-else key="album" @back="screen = 'hub'" />
+      <AlbumView v-else-if="screen === 'album'" key="album" @back="screen = 'hub'" />
+      <MonthRecapView v-else key="recap" @back="screen = 'hub'" />
     </Transition>
     <Transition name="heart-loader">
       <div v-if="pageLoading" class="page-loader" role="status" aria-live="polite">
