@@ -33,7 +33,7 @@ jobs:
           VITE_STORY_OWNER_EMAIL: ${{ secrets.VITE_STORY_OWNER_EMAIL }}
           VITE_APP_VERSION: ${{ github.sha }}
       - name: Write deployed app version
-        run: node -e "require('node:fs').writeFileSync('dist/version.json', JSON.stringify({ version: process.env.VITE_APP_VERSION }))"
+        run: echo "$VITE_APP_VERSION" > dist/version.txt
         env:
           VITE_APP_VERSION: ${{ github.sha }}
       - uses: actions/upload-pages-artifact@v3
