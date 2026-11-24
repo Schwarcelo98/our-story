@@ -138,22 +138,20 @@ onUnmounted(() => { for (const key of Object.keys(touchStarts)) delete touchStar
                 <span class="carousel-count">{{ (galleryIndexes[memory.id] || 0) + 1 }} / {{ photosByMoment[memory.id].length }}</span>
               </template>
             </div>
-            <div v-else class="memory-placeholder" aria-label="Photo placeholder">
-              <svg class="placeholder-art" viewBox="0 0 420 190" role="img" :aria-label="`Illustration placeholder for ${memory.imageHint}`">
+            <div v-else class="memory-placeholder" aria-hidden="true">
+              <svg class="placeholder-art" viewBox="0 0 420 190" aria-hidden="true">
                 <defs>
-                  <linearGradient :id="`sky-${memory.id}`" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff8ef" /><stop offset="1" stop-color="#f0dce0" /></linearGradient>
+                  <linearGradient :id="`paper-${memory.id}`" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fffaf2" /><stop offset="1" stop-color="#f2dfe6" /></linearGradient>
                 </defs>
-                <rect x="2" y="2" width="416" height="186" rx="24" :fill="`url(#sky-${memory.id})`" />
-                <circle cx="324" cy="53" r="22" fill="#f7d99b" />
-                <path d="M2 138 106 74l71 47 65-65 176 104v28H2z" fill="#c7d8d0" />
-                <path d="m2 159 118-55 73 36 78-56 147 82v22H2z" fill="#a6c1b9" />
-                <rect x="174" y="62" width="72" height="54" rx="13" fill="#fffaf5" stroke="#8d7188" stroke-width="4" />
-                <circle cx="210" cy="89" r="15" fill="#e7c7ca" stroke="#8d7188" stroke-width="4" />
-                <circle cx="232" cy="73" r="3" fill="#d8b16d" />
-                <path d="M138 44h27m-13-13v27M273 121h18m-9-9v18" stroke="#c4869a" stroke-width="3" stroke-linecap="round" />
+                <rect x="2" y="2" width="416" height="186" rx="24" :fill="`url(#paper-${memory.id})`" />
+                <path d="M44 134c19-13 36-19 54-18m278 18c-19-13-36-19-54-18" fill="none" stroke="#b7c3a9" stroke-width="3" stroke-linecap="round" />
+                <path d="M79 124c-8-13-20-13-23-3 8 8 16 9 23 3m13-7c1-14 12-20 19-12-3 10-10 14-19 12m210 0c-1-14-12-20-19-12 3 10 10 14 19 12m-13 7c8-13 20-13 23-3-8 8-16 9-23 3" fill="#d9b9b0" />
+                <path d="M178 122c-10-9-9-25 2-29 8-3 15 3 20 10 5-7 12-13 20-10 11 4 12 20 2 29l-22 20z" fill="#dc9eac" opacity=".9" />
+                <path d="M205 67c-6-6-5-15 2-18 5-2 9 2 12 7 3-5 7-9 12-7 7 3 8 12 2 18l-14 13z" fill="#f0c5c9" />
+                <path d="m125 68 3 8 8 3-8 3-3 8-3-8-8-3 8-3zm169 37 2 6 6 2-6 2-2 6-2-6-6-2 6-2z" fill="#c89a57" />
+                <circle cx="152" cy="45" r="3" fill="#c4869a" /><circle cx="275" cy="57" r="3" fill="#c4869a" />
+                <path d="m161 143 3 3m91-69 3 3m-133 28 3 3m145 40 3 3" stroke="#fffaf5" stroke-width="4" stroke-linecap="round" />
               </svg>
-              <span class="placeholder-label">A photo could go here</span>
-              <span class="placeholder-hint">{{ memory.imageHint }}</span>
             </div>
             <div class="memory-copy">
               <time :datetime="memory.date">{{ memory.dateLabel }}</time>
