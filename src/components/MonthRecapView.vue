@@ -23,7 +23,9 @@ const stats = [
   { value: String(daysBetween), label: "days between our first date and becoming a couple" },
   { value: String(firstMonth.memories.length), label: "special moments in our timeline" },
   { value: "1", label: "first weekend getaway" },
-  { value: "1", label: "four-legged travel buddy · Benny" }
+  { value: "1", label: "four-legged travel buddy · Benny" },
+  { value: "18", label: "days together" },
+  { value: "∞", label: "kisses" }
 ];
 
 const draft = reactive({ moment_id: firstMonth.memories[0].id, title: "", date: firstMonth.memories[0].date, note: "", file: null });
