@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, onMounted, onUnmounted } from "vue";
 import { authReady, session, signOut } from "./auth";
 import { configured } from "./supabase";
 import LoginView from "./components/LoginView.vue";
@@ -19,6 +19,11 @@ const loggedInName = computed(() => {
   if (email === "daniel.schwarzer@gmx.at") return "Dani";
   return session.value?.user?.email || "there";
 });
+const recapOwnerEmail = (import.meta.env.VITE_STORY_OWNER_EMAIL || "").trim().toLowerCase();
+const canOpenRecap = () => Boolean(
+  session.value?.user?.email?.trim().toLowerCase() === recapOwnerEmail
+  || Date.now() >= new Date("2026-11-25T00:00:00+01:00").getTime()
+);
 let pageTimer;
 
 watch(screen, () => {
@@ -31,8 +36,33 @@ watch(session, async (nextSession) => {
   if (nextSession) {
     try { await loadSharedState(); }
     catch (error) { console.error("Could not load shared story progress", error); }
+    if (window.location.hash === "#recap" && canOpenRecap()) screen.value = "recap";
+  } else if (screen.value === "recap") {
+    screen.value = "hub";
   }
 }, { immediate: true });
+
+function openSection(target) {
+  if (target === "recap" && !canOpenRecap()) return;
+  if (target === "recap") window.location.hash = "recap";
+  else if (window.location.hash) window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+  screen.value = target;
+}
+
+function backToHub() {
+  if (window.location.hash) window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+  screen.value = "hub";
+}
+
+function syncRecapHash() {
+  if (window.location.hash === "#recap") {
+    if (session.value && canOpenRecap()) screen.value = "recap";
+  } else if (screen.value === "recap") {
+    screen.value = "hub";
+  }
+}
+onMounted(() => window.addEventListener("hashchange", syncRecapHash));
+onUnmounted(() => window.removeEventListener("hashchange", syncRecapHash));
 
 function pick(d) {
   deck.value = d;
@@ -52,11 +82,11 @@ function pick(d) {
       <span class="logout-sparkle" aria-hidden="true">✦</span>
     </button>
     <Transition name="page" mode="out-in">
-      <HubView v-if="screen === 'hub'" key="hub" @open="screen = $event" />
+      <HubView v-if="screen === 'hub'" key="hub" @open="openSection" />
       <HomeView v-else-if="screen === 'decks'" key="decks" @select="pick" @back="screen = 'hub'" />
       <GameView v-else-if="screen === 'game'" :key="`game-${deck.id}`" :deck="deck" @back="screen = 'decks'" />
       <AlbumView v-else-if="screen === 'album'" key="album" @back="screen = 'hub'" />
-      <MonthRecapView v-else key="recap" @back="screen = 'hub'" />
+      <MonthRecapView v-else key="recap" @back="backToHub" />
     </Transition>
     <Transition name="heart-loader">
       <div v-if="pageLoading" class="page-loader" role="status" aria-live="polite">

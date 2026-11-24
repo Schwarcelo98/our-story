@@ -70,7 +70,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="home recap-page">
+  <main id="recap" class="home recap-page">
     <button class="icon back" aria-label="Back" @click="$emit('back')">&larr;</button>
 
     <header class="recap-hero">
